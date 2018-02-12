@@ -2,8 +2,8 @@ from aimacode.planning import Action
 from aimacode.search import Problem
 from aimacode.utils import expr, Expr
 from lp_utils import decode_state
-from functools import lru_cache
 
+import functools
 
 class PgNode():
     """Base class for planning graph nodes.
@@ -192,6 +192,7 @@ def mutexify(node1: PgNode, node2: PgNode):
         raise TypeError('Attempted to mutex two nodes of different types')
     node1.mutex.add(node2)
     node2.mutex.add(node1)
+
 
 class PlanningGraph():
     """
@@ -558,5 +559,4 @@ class PlanningGraph():
                     break
                 count += 1
         return level_sum
-
 

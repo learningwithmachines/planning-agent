@@ -9,8 +9,12 @@ from lp_utils import (
 )
 from my_planning_graph import PlanningGraph
 
-from functools import lru_cache
+from functools import lru_cache, partial
+from multiprocessing import Pool
 
+
+def p_run(arg):
+    return PlanningGraph(arg).h_levelsum()
 
 class AirCargoProblem(Problem):
     def __init__(self, cargos, planes, airports, initial: FluentState, goal: list):
@@ -180,25 +184,25 @@ class AirCargoProblem(Problem):
                 return False
         return True
 
-    def h_1(self, node: Node):
+    def h_1(*args) -> int:
         # note that this is not a true heuristic
         h_const = 1
         return h_const
 
     @lru_cache(maxsize=8192)
-    def h_pg_levelsum(self, node: Node):
+    def h_pg_levelsum(self, node: Node) -> int:
         """This heuristic uses a planning graph representation of the problem
         state space to estimate the sum of all actions that must be carried
         out from the current state in order to satisfy each individual goal
         condition.
         """
         # requires implemented PlanningGraph class
-        pg = PlanningGraph(self, node.state)
-        pg_levelsum = pg.h_levelsum()
-        return pg_levelsum
+        sumpool = Pool(6)
+        for levelsum in sumpool.imap_unordered(p_run, node):
+            return levelsum
 
     @lru_cache(maxsize=8192)
-    def h_ignore_preconditions(self, node: Node):
+    def h_ignore_preconditions(self, node: Node) -> int:
         """This heuristic estimates the minimum number of actions that must be
         carried out from the current state in order to satisfy all of the goal
         conditions by ignoring the preconditions required for an action to be
